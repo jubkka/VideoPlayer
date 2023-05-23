@@ -1,0 +1,218 @@
+﻿<Window x:Class="VideoPlayer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:VideoPlayer"
+        mc:Ignorable="d"
+        Title="VideoPlayer" Background="black" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" MinWidth="425" MinHeight="425" WindowStartupLocation="CenterOwner" WindowStyle="ThreeDBorderWindow" Width="726" Loaded="Loaded_App" Icon="/icon.png" Closing="Closing_App">
+    <DockPanel>
+        <Menu x:Name="TopMenu" DockPanel.Dock="Top" Height="24"  >
+            <MenuItem Header="Файл">
+                <MenuItem Header="Открыть файл" Click="OpenFastFile"/>
+                <MenuItem Header="Открыть папку" Click="OpenDirectoryButtonInMenu"/>
+                <MenuItem Header="Открыть несколько файлов" Click="OpenManyVideos"/>
+                <MenuItem Header="Недавние файлы" x:Name="LastOpenVideos">
+                    <MenuItem Header="Очистить список" Click="ClearLastOpenVideosButtonInMenu"/>
+                    <Separator/>
+                </MenuItem>
+                <MenuItem Header="Закрыть" Click="CloseVideo"/>
+                <Separator />
+                <MenuItem Header="Расположение файла" Click="DirectoryFile"/>
+                <Separator />
+                <MenuItem Header="Выход" Click="CloseApplication"/>
+            </MenuItem>
+            <MenuItem Header="Вид" >
+                <MenuItem Header="Скрыть меню" Click="HideMenu" />
+                <MenuItem Header="Ползунок" Click="HideTimeLineSlider"/>
+                <MenuItem Header="Элементы управления" Click="HideControlPanel"  />
+                <MenuItem Header="Статусная строка" Click="HideStatusBar" />
+                <MenuItem Header="Список воспроизведения"  Click="HidePlayList"/>
+                <Separator/>
+                <MenuItem Header="Во весь экран" Click="Window_Fullscreen" />
+                <Separator/>
+                <MenuItem Header="Поверх всех окон" Click="Window_Topmost" />
+            </MenuItem>
+            <MenuItem Header="Воспроизведение" >
+                <MenuItem Header="Воспроизведение/Пауза"  Click="StartButtonInMenu"/>
+                <MenuItem Header="Стоп" Click="StopButtonInMenu"  />
+                <Separator/>
+                <MenuItem Header="Скорость воспроизведения">
+                    <MenuItem Header="0.25x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="0.5x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="0.75x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="1x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="1.25x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="1.5x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="1.75x" Click="ChangeSpeedInMenu"/>
+                    <MenuItem Header="2x" Click="ChangeSpeedInMenu"/>
+                </MenuItem>
+                <MenuItem Header="Увеличить скорость" Click="IncreaseSpeedButtonInMenu"  />
+                <MenuItem Header="Уменьшить скорость" Click="DecreaseButtonInMenu"  />
+                <MenuItem Header="Скорость по умолчанию" Click="NormalSpeedButtonInMenu"  />
+                <Separator/>
+                <MenuItem Header="Громкость">
+                    <MenuItem Header="Увеличить громкость" Click="IncreaseSoundButtonInMenu" />
+                    <MenuItem Header="Уменьшить громкость" Click="DecreaseSoundButtonInMenu" />
+                    <Separator/>
+                    <MenuItem Header="Выключить звук" Click="MuteButtonInMenu" x:Name="muteButtonInMenu"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="Навигация" Height="24">
+                <MenuItem Header="Предыдущий" Click="PreviousVideo"/>
+                <MenuItem Header="Следующий" Click="NextVideo"/>
+                <MenuItem Header="Перемотка" Click="FastForwardButtonInMenu"/>
+            </MenuItem>
+        </Menu>
+        <DockPanel x:Name="StatusBar" DockPanel.Dock="Bottom" Background="Black" Height="20">
+            <Label Content="Ожидание" x:Name="StateVideo" HorizontalAlignment="Left" Foreground="White" FontSize="14" Margin="0,-6,0,-5" DockPanel.Dock="Left"/>
+            <Label Content="00:00:00 / 00:00:00" x:Name="timeVideo" Foreground="White" FontSize="14" Margin="0,-5,0,-5" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Background="#FF202020" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5">
+            <DockPanel.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="-1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </DockPanel.RenderTransform>
+            <DockPanel x:Name="PlayListBox"  DockPanel.Dock="Top" Visibility="Collapsed">
+                <ScrollViewer RenderTransformOrigin="0.5,0.5" VerticalContentAlignment="Center" CanContentScroll="True" MaxHeight="50"> 
+                    <ScrollViewer.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </ScrollViewer.RenderTransform>
+                    <Grid ScrollViewer.VerticalScrollBarVisibility="Visible">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel x:Name="PlayList" RenderTransformOrigin="0.5,0.5" Visibility="Visible" Grid.Column="0"/>
+                        <StackPanel x:Name="RemoveButtonsVideo" RenderTransformOrigin="0.5,0.5" Visibility="Visible" Grid.Column="1"/>
+
+                    </Grid>
+                    
+                </ScrollViewer>
+            </DockPanel>
+
+            <Slider x:Name="timelineSlider" Style="{StaticResource LengthVideo_Slider}" ValueChanged="timelineSlider_ValueChanged" Thumb.DragCompleted="sliProgress_DragCompleted" Thumb.DragStarted="sliProgress_DragStarted" IsMoveToPointEnabled="True"  DockPanel.Dock="Top" FlowDirection="LeftToRight" ScrollViewer.VerticalScrollBarVisibility="Disabled" Margin="3,5,3,5" RenderTransformOrigin="0.5,0.5" BorderBrush="Black" BorderThickness="1,1,1,1" Cursor="Hand" Height="18" Maximum="1" SmallChange="1" TickPlacement="Both" Delay="500">
+                <Slider.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform ScaleX="-1"/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Slider.RenderTransform>
+            </Slider>
+            <DockPanel x:Name="ControlPanel" >
+                <Button Style="{StaticResource normalButton}" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Right" Width="32" Height="32" Margin="2,0,2,2" ToolTip="Воспроизведение" Click="PlayVideo" Name="PlayButton">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+
+                    <Image Style="{StaticResource ActiveImageButton}" Name="PlayImageButton" Height="32" Width="32" Stretch="None" Source="/play.png"/>
+
+                </Button>
+                <Button Style="{StaticResource normalButton}" DockPanel.Dock="Right" Width="32" Height="32" ToolTip="Пауза" Click="PauseVideo" x:Name="PauseButton">
+                    <Image Style="{StaticResource ActiveImageButton}" Height="32" Width="32" Source="/pause.png" Stretch="None" Name="PauseImageButton"/>
+                </Button>
+                <Button Style="{StaticResource normalButton}" DockPanel.Dock="Right" Width="32" Height="32" ToolTip="Стоп" Click="StopVideo" x:Name="StopButton">
+                    <Image Style="{StaticResource ActiveImageButton}" Height="32" Width="32" Stretch="None" Source="/stop.png" Name="StopImageButton"/>
+                </Button>
+                <Border BorderThickness="1" DockPanel.Dock="Right" Width="2" Margin="0,0,0,2">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush EndPoint="1,0" StartPoint="0.35,0">
+                            <GradientStop Color="#FF121212"/>
+                            <GradientStop Color="#FF636363" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
+                <Button Style="{StaticResource normalButton}" DockPanel.Dock="Right" Width="32" Height="32" Margin="2,0,2,2" ToolTip="Назад" Click="PreviousVideo">
+                    <Image Height="32" Width="32" Stretch="None" Source="/next.png"/>
+                </Button>
+                <Button Style="{StaticResource normalButton}" Name="SpeedButton1"  DockPanel.Dock="Right" Width="32" Height="32" Padding="0,0,0,1" ToolTip="Уменьшить скорость" Click="DecreaseSpeed">
+                    <Image Style="{StaticResource ActiveImageButton}" Height="32" Width="32" Stretch="None" Source="/speed.png" Name="SpeedImageButton1"/>
+                </Button>
+                <Button Style="{StaticResource normalButton}" Name="SpeedButton2" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Right" Width="32" Height="32" Padding="0,0,0,0" ToolTip="Увеличить скорость" Click="IncreaseSpeed">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Image Style="{StaticResource ActiveImageButton}" Height="32" Width="32" Stretch="None" Source="/speed.png" Name="SpeedImageButton2" Cursor=""/>
+                </Button>
+                <Button Style="{StaticResource normalButton}" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Right" Width="32" Height="32" Padding="0,0,0,0" ToolTip="Вперед" Click="NextVideo">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1" ScaleY="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Image Height="32" Width="32" Stretch="None" Source="/next.png"/>
+                </Button>
+                <Border BorderThickness="1" DockPanel.Dock="Right" Width="2" HorizontalAlignment="Right" Margin="0,0,0,2">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush EndPoint="1,0" StartPoint="0.35,0">
+                            <GradientStop Color="#FF121212"/>
+                            <GradientStop Color="#FF636363" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
+                <Button Style="{StaticResource normalButton}" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Right" Width="32" Height="32" Padding="0,0,0,0" Margin="2,0,2,2" ToolTip="Перемотка" Click="FastForwardButton_Click">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Image Height="32" Width="32" Source="/step.png" Stretch="None"/>
+                </Button>
+                <Border BorderThickness="1" DockPanel.Dock="Right" Width="2" HorizontalAlignment="Right" Margin="0,0,0,2">
+                    <Border.BorderBrush>
+                        <LinearGradientBrush EndPoint="1,0" StartPoint="0.35,0">
+                            <GradientStop Color="#FF121212"/>
+                            <GradientStop Color="#FF636363" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.BorderBrush>
+                </Border>
+                <Slider x:Name="sliderVolume" Style="{StaticResource Volume_Slider}" MouseWheel="sliderVolume_MouseWheel"  IsMoveToPointEnabled="True" Margin="7,0,0,0" Maximum="100" AutoToolTipPlacement="TopLeft" Cursor="Hand" Width="58" IsDirectionReversed="True" Height="20" ValueChanged="VolumeChanged" SmallChange="1" Value="10"/>
+                <Button Style="{StaticResource normalButton}" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Left" Width="32" HorizontalAlignment="Left" Height="32" Padding="0,0,0,0" ToolTip="Отключить звук" Margin="2,1,0,2" Click="Mute" x:Name="MuteButton" BorderBrush="Black">
+                    <Button.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="-1"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </Button.RenderTransform>
+                    <Image Height="30" Width="30" Stretch="None" Source="/volumeOn.png" x:Name="volumeButton"/>
+                </Button>
+            </DockPanel>
+        </DockPanel>
+        <DockPanel FlowDirection="RightToLeft" Background="Black" DockPanel.Dock="Top" MouseDown="mainArea_MouseDown">
+            <DockPanel DockPanel.Dock="Top" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Image Source="E:/Users/zxc/source/repos/VideoPlayer/VideoPlayer/Media-Player.png" x:Name="Logo" Stretch="None" RenderTransformOrigin="0.701,0.526" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Top" ScrollViewer.VerticalScrollBarVisibility="Disabled"/>
+                <MediaElement MediaEnded="Player_MediaEnded" MediaOpened="media_MediaOpened" x:Name="Player" RenderTransformOrigin="0.5,0.5" DockPanel.Dock="Top" UnloadedBehavior="Manual" LoadedBehavior="Manual" Volume="0.1" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            </DockPanel>
+        </DockPanel>
+    </DockPanel>
+</Window>
